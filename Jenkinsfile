@@ -1,51 +1,165 @@
 pipeline {
-    agent { label 'jenkins-agent' }  // hoặc 'ubuntu' nếu bạn đặt label như vậy
-
-    tools {
-        maven 'Maven 3.8.6'  // Đã cấu hình trong Jenkins (Global Tool Configuration)
-        jdk 'JDK17'          // Đã cấu hình Java 17
-    }
+    agent any
 
     environment {
-        MAVEN_OPTS = '-Dmaven.test.failure.ignore=false'
+        MOD_FILES = ''
     }
 
     stages {
-        stage('Checkout') {
+        stage('Detect Changes') {
+            agent any
             steps {
-                git branch: 'main', url: 'https://github.com/<your-group>/spring-petclinic-microservices.git'
+                script {
+                    def services = []
+                    MOD_FILES = sh(script: 'git diff --name-only HEAD~1', returnStdout: true).trim()
+                    echo "🔍 Modified files: ${MOD_FILES}"
+
+                    MOD_FILES.split("\n").each { file ->
+                        if (file.startsWith("spring-petclinic-") && file.split("/").size() > 1) {
+                            def svc = file.split("/")[0]
+                            if (!services.contains(svc)) {
+                                services << svc
+                            }
+                        }
+                    }
+
+                    if (services.isEmpty()) {
+                        echo "✅ No changes detected, skipping."
+                        currentBuild.result = 'SUCCESS'
+                        return
+                    }
+
+                    echo "⚙️ Affected services: ${services}"
+                    env.SERVICES = services.join(',')
+                }
+            }
+        }
+
+        stage('Test & Coverage') {
+            agent { label 'ser1' }
+            when {
+                expression { return env.SERVICES != null && env.SERVICES != "" }
+            }
+            steps {
+                script {
+                    def services = env.SERVICES.split(',')
+                    services.each { svc ->
+                        echo "🧪 Testing: ${svc}"
+                        dir(svc) {
+                            sh '../mvnw clean verify -PbuildDocker jacoco:report'
+                            def jacocoFile = sh(script: "find target -name jacoco.xml", returnStdout: true).trim()
+
+                            if (!jacocoFile) {
+                                echo "⚠️ No JaCoCo report found for ${svc}."
+                            } else {
+                                def missed = sh(
+                                    script: """awk -F'missed="' '/<counter type="LINE"/ {gsub(/".*/, "", \$2); sum += \$2} END {print sum}' ${jacocoFile}""",
+                                    returnStdout: true
+                                ).trim()
+
+                                def covered = sh(
+                                    script: """awk -F'covered="' '/<counter type="LINE"/ {gsub(/".*/, "", \$2); sum += \$2} END {print sum}' ${jacocoFile}""",
+                                    returnStdout: true
+                                ).trim()
+
+                                def total = missed.toInteger() + covered.toInteger()
+                                def coveragePercent = (total > 0) ? (covered.toInteger() * 100 / total) : 0
+
+                                echo "🚀 Test coverage for ${svc}: ${coveragePercent}%"
+
+                                if (coveragePercent < 70) {
+                                    error("❌ Test coverage below 70% for ${svc}.")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            post {
+                always {
+                    junit '**/target/surefire-reports/*.xml'
+                    script {
+                        def services = env.SERVICES.split(',')
+                        services.each { svc ->
+                            echo "📊 Generating JaCoCo for: ${svc}"
+                            dir(svc) {
+                                jacoco(
+                                    execPattern: 'target/jacoco.exec',
+                                    classPattern: "target/classes",
+                                    sourcePattern: "src/main/java",
+                                    exclusionPattern: "**/test/**",
+                                    minimumLineCoverage: '70',
+                                    changeBuildStatus: true
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
 
         stage('Build') {
-            steps {
-                sh 'mvn clean compile'
+            agent { label 'ser2' }
+            when {
+                expression { return env.SERVICES != null && env.SERVICES != "" }
             }
-        }
-
-        stage('Test') {
             steps {
-                sh 'mvn test'
-                junit '**/target/surefire-reports/*.xml'
-            }
-        }
-
-        stage('Package') {
-            steps {
-                sh 'mvn package'
+                script {
+                    def services = env.SERVICES.split(',')
+                    services.each { svc ->
+                        echo "🔨 Building: ${svc}"
+                        dir(svc) {
+                            sh '../mvnw clean package -DskipTests -T 1C'
+                        }
+                    }
+                }
             }
         }
     }
 
     post {
-        always {
-            echo 'Build finished'
-        }
         success {
-            echo 'Build successful 🎉'
+            script {
+                def commitId = env.GIT_COMMIT
+                echo "✅ Sending 'success' to GitHub: ${commitId}"
+                def response = httpRequest(
+                    url: "https://api.github.com/repos/phucvu0210/spring-petclinic-microservices/statuses/${commitId}",
+                    httpMode: 'POST',
+                    contentType: 'APPLICATION_JSON',
+                    requestBody: """{
+                        \"state\": \"success\",
+                        \"description\": \"Build passed\",
+                        \"context\": \"ci/jenkins-pipeline\",
+                        \"target_url\": \"${env.BUILD_URL}\"
+                    }""",
+                    authentication: 'github-token'
+                )
+                echo "📡 GitHub Response: ${response.status}"
+            }
         }
+
         failure {
-            echo 'Build failed 💥'
+            script {
+                def commitId = env.GIT_COMMIT
+                echo "❌ Sending 'failure' to GitHub: ${commitId}"
+                def response = httpRequest(
+                    url: "https://api.github.com/repos/phucvu0210/spring-petclinic-microservices/statuses/${commitId}",
+                    httpMode: 'POST',
+                    contentType: 'APPLICATION_JSON',
+                    requestBody: """{
+                        \"state\": \"failure\",
+                        \"description\": \"Build failed\",
+                        \"context\": \"ci/jenkins-pipeline\",
+                        \"target_url\": \"${env.BUILD_URL}\"
+                    }""",
+                    authentication: 'github-token'
+                )
+                echo "📡 GitHub Response: ${response.status}"
+            }
+        }
+
+        always {
+            echo "🔚 Pipeline execution complete."
         }
     }
 }
