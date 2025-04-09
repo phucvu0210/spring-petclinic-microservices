@@ -36,7 +36,7 @@ pipeline {
         }
 
         stage('Test & Coverage') {
-            agent { label 'ser1' }
+            agent { label any }
             when {
                 expression { return env.SERVICES != null && env.SERVICES != "" }
             }
@@ -99,7 +99,7 @@ pipeline {
         }
 
         stage('Build') {
-            agent { label 'ser2' }
+            agent { label any }
             when {
                 expression { return env.SERVICES != null && env.SERVICES != "" }
             }
