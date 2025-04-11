@@ -118,35 +118,48 @@ pipeline {
     }
 
     post {
-    success {
-        script {
-            def commitId = env.GIT_COMMIT
-            echo "✅ Sending 'success' to GitHub: ${commitId}"
-            withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
-                sh """
-                    curl -X POST \
-                        -H "Authorization: token \$GITHUB_TOKEN" \
-                        -H "Accept: application/vnd.github.v3+json" \
-                        -d '{\"state\":\"success\",\"description\":\"Build passed\",\"context\":\"ci/jenkins-pipeline\",\"target_url\":\"${env.BUILD_URL}\"}' \
-                        https://api.github.com/repos/phucvu0210/spring-petclinic-microservices/statuses/${commitId}
-                """
+        success {
+            script {
+                def commitId = env.GIT_COMMIT
+                echo "✅ Sending 'success' to GitHub: ${commitId}"
+                def response = httpRequest(
+                    url: "https://api.github.com/repos/phucvu0210/spring-petclinic-microservices/statuses/${commitId}",
+                    httpMode: 'POST',
+                    contentType: 'APPLICATION_JSON',
+                    requestBody: """{
+                        \"state\": \"success\",
+                        \"description\": \"Build passed\",
+                        \"context\": \"ci/jenkins-pipeline\",
+                        \"target_url\": \"${env.BUILD_URL}\"
+                    }""",
+                    authentication: 'github-token1'
+                )
+                echo "📡 GitHub Response: ${response.status}"
             }
         }
-    }
-    failure {
-        script {
-            def commitId = env.GIT_COMMIT
-            echo "❌ Sending 'failure' to GitHub: ${commitId}"
-            withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
-                sh """
-                    curl -X POST \
-                        -H "Authorization: token \$GITHUB_TOKEN" \
-                        -H "Accept: application/vnd.github.v3+json" \
-                        -d '{\"state\":\"failure\",\"description\":\"Build failed\",\"context\":\"ci/jenkins-pipeline\",\"target_url\":\"${env.BUILD_URL}\"}' \
-                        https://api.github.com/repos/phucvu0210/spring-petclinic-microservices/statuses/${commitId}
-                """
+
+        failure {
+            script {
+                def commitId = env.GIT_COMMIT
+                echo "❌ Sending 'failure' to GitHub: ${commitId}"
+                def response = httpRequest(
+                    url: "https://api.github.com/repos/phucvu0210/spring-petclinic-microservices/statuses/${commitId}",
+                    httpMode: 'POST',
+                    contentType: 'APPLICATION_JSON',
+                    requestBody: """{
+                        \"state\": \"failure\",
+                        \"description\": \"Build failed\",
+                        \"context\": \"ci/jenkins-pipeline\",
+                        \"target_url\": \"${env.BUILD_URL}\"
+                    }""",
+                    authentication: 'github-token1'
+                )
+                echo "📡 GitHub Response: ${response.status}"
             }
         }
+
+        always {
+            echo "🔚 Pipeline execution complete."
+        }
     }
-}
 }
