@@ -118,12 +118,10 @@ pipeline {
     }
 
     post {
-    success {
-        script {
-            def commitId = env.GIT_COMMIT
-            echo "✅ Sending 'success' to GitHub: ${commitId}"
-            echo "Using credential: github-token"
-            try {
+        success {
+            script {
+                def commitId = env.GIT_COMMIT
+                echo "✅ Sending 'success' to GitHub: ${commitId}"
                 def response = httpRequest(
                     url: "https://api.github.com/repos/phucvu0210/spring-petclinic-microservices/statuses/${commitId}",
                     httpMode: 'POST',
@@ -137,17 +135,13 @@ pipeline {
                     authentication: 'github-token'
                 )
                 echo "📡 GitHub Response: ${response.status}"
-            } catch (Exception e) {
-                echo "❌ Failed to send status: ${e.message}"
             }
         }
-    }
-    failure {
-        script {
-            def commitId = env.GIT_COMMIT
-            echo "❌ Sending 'failure' to GitHub: ${commitId}"
-            echo "Using credential: github-token"
-            try {
+
+        failure {
+            script {
+                def commitId = env.GIT_COMMIT
+                echo "❌ Sending 'failure' to GitHub: ${commitId}"
                 def response = httpRequest(
                     url: "https://api.github.com/repos/phucvu0210/spring-petclinic-microservices/statuses/${commitId}",
                     httpMode: 'POST',
@@ -161,10 +155,11 @@ pipeline {
                     authentication: 'github-token'
                 )
                 echo "📡 GitHub Response: ${response.status}"
-            } catch (Exception e) {
-                echo "❌ Failed to send status: ${e.message}"
             }
         }
+
+        always {
+            echo "🔚 Pipeline execution complete."
+        }
     }
-}
 }
