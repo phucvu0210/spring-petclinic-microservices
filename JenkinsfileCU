@@ -1,0 +1,16 @@
+pipeline {
+    agent any
+    environment {
+        K8S_NAMESPACE = 'dev'
+    }
+    stages {
+        stage('Cleanup Deployment') {
+            steps {
+                script {
+                    sh "helm uninstall petclinic --namespace ${K8S_NAMESPACE} || true"
+                    sh "kubectl delete namespace ${K8S_NAMESPACE} || true"
+                }
+            }
+        }
+    }
+}
