@@ -57,15 +57,21 @@ pipeline {
             }
         }
         stage('Expose Service') {
-            steps {
-                script {
-                    def nodeIp = sh(script: "kubectl get nodes -o jsonpath='{.items[?(@.metadata.labels.kubernetes.io/role==\"worker\")].status.addresses[?(@.type==\"ExternalIP\")].address}'", returnStdout: true).trim()
-                    def servicePort = sh(script: "kubectl get svc gateway -n ${K8S_NAMESPACE} -o jsonpath='{.spec.ports[0].nodePort}'", returnStdout: true).trim()
-                    echo "Access the application at: http://${nodeIp}:${servicePort}"
-                    echo "Or use: http://petclinic.local:${servicePort} (after adding '<node-ip> petclinic.local' to /etc/hosts)"
-                }
+    steps {
+        script {
+            def nodeIp = sh(script: "kubectl get nodes -o jsonpath='{.items[?(@.metadata.labels.node-role\\.kubernetes\\.io/control-plane!=\"\")].status.addresses[?(@.type==\"InternalIP\")].address}'", returnStdout: true).trim()
+            if (!nodeIp) {
+                nodeIp = sh(script: "kubectl get nodes -o jsonpath='{.items[?(@.metadata.labels.node-role\\.kubernetes\\.io/control-plane==null)].status.addresses[?(@.type==\"InternalIP\")].address}'", returnStdout: true).trim()
             }
+            if (!nodeIp) {
+                error "Could not find node IP. Please check cluster configuration."
+            }
+            def servicePort = sh(script: "kubectl get svc gateway -n ${K8S_NAMESPACE} -o jsonpath='{.spec.ports[0].nodePort}'", returnStdout: true).trim()
+            echo "Access the application at: http://${nodeIp}:${servicePort}"
+            echo "Or use: http://petclinic.local:${servicePort} (after adding '${nodeIp} petclinic.local' to /etc/hosts)"
         }
+    }
+}
     }
     post {
         always {
