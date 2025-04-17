@@ -8,7 +8,7 @@ spec:
     app: admin
   ports:
   - protocol: TCP
-    port: {{ .Values.admin.port }}
-    targetPort: {{ .Values.admin.port }}
+    port: {{ .Values.adminServer.port }}
+    targetPort: {{ .Values.adminServer.port }}
     nodePort: 30090
   type: NodePort

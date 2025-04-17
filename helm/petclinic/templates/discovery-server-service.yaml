@@ -8,7 +8,7 @@ spec:
     app: discovery-server
   ports:
   - protocol: TCP
-    port: {{ .Values.discovery-server.port }}
-    targetPort: {{ .Values.discovery-server.port }}
+    port: {{ .Values.discoveryServer.port }}
+    targetPort: {{ .Values.discoveryServer.port }}
     nodePort: 30080
   type: NodePort

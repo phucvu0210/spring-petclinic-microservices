@@ -1,32 +1,32 @@
-admin-server:
+adminServer:
   repository: phucvu0210/spring-petclinic-admin-server
   tag: latest
   port: 9090
-api-gateway:
+apiGateway:
   repository: phucvu0210/spring-petclinic-api-gateway
   tag: latest
   port: 8080
-config-server:
+configServer:
   repository: phucvu0210/spring-petclinic-config-server
   tag: latest
   port: 8888
-customers-service:
+customersService:
   repository: phucvu0210/spring-petclinic-customers-service
   tag: latest
   port: 8081
-discovery-server:
+discoveryServer:
   repository: phucvu0210/spring-petclinic-discovery-server
   tag: latest
   port: 8761
-genai-service:
+genaiService:
   repository: phucvu0210/spring-petclinic-genai-service
   tag: latest
   port: 8084
-vets-service:
+vetsService:
   repository: phucvu0210/spring-petclinic-vets-service
   tag: latest
   port: 8083
-visits-service:
+visitsService:
   repository: phucvu0210/spring-petclinic-visits-service
   tag: latest
   port: 8082

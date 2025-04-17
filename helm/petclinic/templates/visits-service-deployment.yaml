@@ -15,9 +15,9 @@ spec:
     spec:
       containers:
       - name: visits-service
-        image: {{ .Values.visits-service.repository }}:{{ .Values.visits-service.tag }}
+        image: {{ .Values.visitsService.repository }}:{{ .Values.visitsService.tag }}
         ports:
-        - containerPort: {{ .Values.visits-service.port }}
+        - containerPort: {{ .Values.visitsService.port }}
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: docker

@@ -15,9 +15,9 @@ spec:
     spec:
       containers:
       - name: api-gateway
-        image: {{ .Values.api-gateway.repository }}:{{ .Values.api-gateway.tag }}
+        image: {{ .Values.apiGateway.repository }}:{{ .Values.apiGateway.tag }}
         ports:
-        - containerPort: {{ .Values.api-gateway.port }}
+        - containerPort: {{ .Values.apiGateway.port }}
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: docker

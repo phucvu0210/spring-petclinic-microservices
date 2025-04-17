@@ -8,7 +8,7 @@ spec:
     app: vets-service
   ports:
   - protocol: TCP
-    port: {{ .Values.vets-service.port }}
-    targetPort: {{ .Values.vets-service.port }}
+    port: {{ .Values.vetsService.port }}
+    targetPort: {{ .Values.vetsService.port }}
     nodePort: 30150
   type: NodePort

@@ -8,7 +8,7 @@ spec:
     app: genai-service
   ports:
   - protocol: TCP
-    port: {{ .Values.genai-service.port }}
-    targetPort: {{ .Values.genai-service.port }}
+    port: {{ .Values.genaiService.port }}
+    targetPort: {{ .Values.genaiService.port }}
     nodePort: 30140
   type: NodePort

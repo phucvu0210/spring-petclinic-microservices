@@ -8,7 +8,7 @@ spec:
     app: api-gateway
   ports:
   - protocol: TCP
-    port: {{ .Values.api-gateway.port }}
-    targetPort: {{ .Values.api-gateway.port }}
+    port: {{ .Values.apiGateway.port }}
+    targetPort: {{ .Values.apiGateway.port }}
     nodePort: 30110
   type: NodePort

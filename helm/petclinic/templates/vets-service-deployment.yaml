@@ -15,9 +15,9 @@ spec:
     spec:
       containers:
       - name: vets-service
-        image: {{ .Values.vets-service.repository }}:{{ .Values.vets-service.tag }}
+        image: {{ .Values.vetsService.repository }}:{{ .Values.vetsService.tag }}
         ports:
-        - containerPort: {{ .Values.vets-service.port }}
+        - containerPort: {{ .Values.vetsService.port }}
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: docker

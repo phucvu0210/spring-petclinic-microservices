@@ -8,7 +8,7 @@ spec:
     app: config-server
   ports:
   - protocol: TCP
-    port: {{ .Values.config-server.port }}
-    targetPort: {{ .Values.config-server.port }}
+    port: {{ .Values.configServer.port }}
+    targetPort: {{ .Values.configServer.port }}
     nodePort: 30120
   type: NodePort

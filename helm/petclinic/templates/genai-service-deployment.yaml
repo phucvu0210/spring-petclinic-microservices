@@ -15,9 +15,9 @@ spec:
     spec:
       containers:
       - name: genai-service
-        image: {{ .Values.genai-service.repository }}:{{ .Values.genai-service.tag }}
+        image: {{ .Values.genaiService.repository }}:{{ .Values.genaiService.tag }}
         ports:
-        - containerPort: {{ .Values.genai-service.port }}
+        - containerPort: {{ .Values.genaiService.port }}
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: docker

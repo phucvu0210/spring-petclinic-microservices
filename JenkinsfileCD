@@ -21,14 +21,14 @@ pipeline {
                     
                     // Map service parameters to Helm values keys using full names
                     def serviceBranchMapping = [
-                        'admin-server': params.'admin-server',
-                        'api-gateway': params.'api-gateway',
-                        'config-server': params.'config-server',
-                        'customers-service': params.'customers-service',
-                        'discovery-server': params.'discovery-server',
-                        'genai-service': params.'genai-service',
-                        'vets-service': params.'vets-service',
-                        'visits-service': params.'visits-service'
+                        'adminServer': params.'admin-server',
+                        'apiGateway': params.'api-gateway',
+                        'configServer': params.'config-server',
+                        'customersService': params.'customers-service',
+                        'discoveryServer': params.'discovery-server',
+                        'genaiService': params.'genai-service',
+                        'vetsService': params.'vets-service',
+                        'visitsService': params.'visits-service'
                     ]
 
                     serviceBranchMapping.each { serviceName, branchName ->

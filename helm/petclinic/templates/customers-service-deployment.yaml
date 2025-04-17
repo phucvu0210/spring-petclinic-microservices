@@ -15,9 +15,9 @@ spec:
     spec:
       containers:
       - name: customers-service
-        image: {{ .Values.customers-service.repository }}:{{ .Values.customers-service.tag }}
+        image: {{ .Values.customersService.repository }}:{{ .Values.customersService.tag }}
         ports:
-        - containerPort: {{ .Values.customers-service.port }}
+        - containerPort: {{ .Values.customersService.port }}
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: docker

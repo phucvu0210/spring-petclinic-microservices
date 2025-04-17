@@ -15,9 +15,9 @@ spec:
     spec:
       containers:
       - name: config-server
-        image: {{ .Values.config-server.repository }}:{{ .Values.config-server.tag }}
+        image: {{ .Values.configServer.repository }}:{{ .Values.configServer.tag }}
         ports:
-        - containerPort: {{ .Values.config-server.port }}
+        - containerPort: {{ .Values.configServer.port }}
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: docker

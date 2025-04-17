@@ -15,9 +15,9 @@ spec:
     spec:
       containers:
       - name: discovery-server
-        image: {{ .Values.discovery-server.repository }}:{{ .Values.discovery-server.tag }}
+        image: {{ .Values.discoveryServer.repository }}:{{ .Values.discoveryServer.tag }}
         ports:
-        - containerPort: {{ .Values.discovery-server.port }}
+        - containerPort: {{ .Values.discoveryServer.port }}
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: docker

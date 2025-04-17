@@ -8,7 +8,7 @@ spec:
     app: visits-service
   ports:
   - protocol: TCP
-    port: {{ .Values.visits-service.port }}
-    targetPort: {{ .Values.visits-service.port }}
+    port: {{ .Values.visitsService.port }}
+    targetPort: {{ .Values.visitsService.port }}
     nodePort: 30160
   type: NodePort

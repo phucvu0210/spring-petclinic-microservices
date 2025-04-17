@@ -15,9 +15,9 @@ spec:
     spec:
       containers:
       - name: admin-server
-        image: {{ .Values.admin-server.repository }}:{{ .Values.admin-server.tag }}
+        image: {{ .Values.adminServer.repository }}:{{ .Values.adminServer.tag }}
         ports:
-        - containerPort: {{ .Values.admin-server.port }}
+        - containerPort: {{ .Values.adminServer.port }}
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: docker

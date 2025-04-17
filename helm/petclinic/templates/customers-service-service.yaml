@@ -8,7 +8,7 @@ spec:
     app: customers-service
   ports:
   - protocol: TCP
-    port: {{ .Values.customers-service.port }}
-    targetPort: {{ .Values.customers-service.port }}
+    port: {{ .Values.customersService.port }}
+    targetPort: {{ .Values.customersService.port }}
     nodePort: 30130
   type: NodePort
