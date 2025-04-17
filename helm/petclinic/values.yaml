@@ -9,7 +9,7 @@ admin:
   tag: latest
   port: 9090
 zipkin:
-  repository: spring-petclinic-zipkin
+  repository: openzipkin/zipkin
   tag: latest
   port: 9411
 gateway:
