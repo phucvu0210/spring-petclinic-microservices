@@ -59,8 +59,8 @@ pipeline {
         stage('Expose Service') {
     steps {
         script {
-            // Lấy InternalIP của node worker (node không có label control-plane)
-            def nodeIp = sh(script: "kubectl get nodes -o jsonpath='{.items[?(!(@.metadata.labels[\"node-role.kubernetes.io/control-plane\"]))].status.addresses[?(@.type==\"InternalIP\")].address}'", returnStdout: true).trim()
+            // Lấy InternalIP của node worker
+            def nodeIp = sh(script: "kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type==\"InternalIP\")].address}' | tr ' ' '\n' | grep -v $(kubectl get nodes -l node-role.kubernetes.io/control-plane -o jsonpath='{.items[*].status.addresses[?(@.type==\"InternalIP\")].address}')", returnStdout: true).trim()
             if (!nodeIp) {
                 error "Could not find node IP. Please check cluster configuration."
             }
