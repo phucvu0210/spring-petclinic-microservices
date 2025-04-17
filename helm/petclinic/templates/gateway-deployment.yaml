@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: gateway
-        image: {{ .Values.dockerhubUsername }}/{{ .Values.gateway.repository }}:{{ .Values.gateway.tag }}
+        image: {{ .Values.gateway.repository }}:{{ .Values.gateway.tag }}
         ports:
         - containerPort: {{ .Values.gateway.port }}
         env:

@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: visits
-        image: {{ .Values.dockerhubUsername }}/{{ .Values.visits.repository }}:{{ .Values.visits.tag }}
+        image: {{ .Values.visits.repository }}:{{ .Values.visits.tag }}
         ports:
         - containerPort: {{ .Values.visits.port }}
         env:

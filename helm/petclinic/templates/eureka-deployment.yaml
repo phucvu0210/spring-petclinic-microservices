@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: eureka
-        image: {{ .Values.dockerhubUsername }}/{{ .Values.eureka.repository }}:{{ .Values.eureka.tag }}
+        image: {{ .Values.eureka.repository }}:{{ .Values.eureka.tag }}
         ports:
         - containerPort: {{ .Values.eureka.port }}
         env:

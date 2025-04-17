@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: admin
-        image: {{ .Values.dockerhubUsername }}/{{ .Values.admin.repository }}:{{ .Values.admin.tag }}
+        image: {{ .Values.admin.repository }}:{{ .Values.admin.tag }}
         ports:
         - containerPort: {{ .Values.admin.port }}
         env:

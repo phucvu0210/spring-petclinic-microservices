@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: vets
-        image: {{ .Values.dockerhubUsername }}/{{ .Values.vets.repository }}:{{ .Values.vets.tag }}
+        image: {{ .Values.vets.repository }}:{{ .Values.vets.tag }}
         ports:
         - containerPort: {{ .Values.vets.port }}
         env:

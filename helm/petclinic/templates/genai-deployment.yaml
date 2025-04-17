@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: genai
-        image: {{ .Values.dockerhubUsername }}/{{ .Values.genai.repository }}:{{ .Values.genai.tag }}
+        image: {{ .Values.genai.repository }}:{{ .Values.genai.tag }}
         ports:
         - containerPort: {{ .Values.genai.port }}
         env:

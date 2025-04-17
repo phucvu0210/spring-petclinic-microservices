@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: customers
-        image: {{ .Values.dockerhubUsername }}/{{ .Values.customers.repository }}:{{ .Values.customers.tag }}
+        image: {{ .Values.customers.repository }}:{{ .Values.customers.tag }}
         ports:
         - containerPort: {{ .Values.customers.port }}
         env:
