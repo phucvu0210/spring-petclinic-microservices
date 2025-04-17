@@ -59,17 +59,15 @@ pipeline {
         stage('Expose Service') {
     steps {
         script {
-            // Lấy InternalIP của node worker
-            def nodeIp = sh(script: "kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type==\"InternalIP\")].address}' | tr ' ' '\n' | grep -v $(kubectl get nodes -l node-role.kubernetes.io/control-plane -o jsonpath='{.items[*].status.addresses[?(@.type==\"InternalIP\")].address}')", returnStdout: true).trim()
-            if (!nodeIp) {
-                error "Could not find node IP. Please check cluster configuration."
-            }
+            def nodeName = sh(script: "kubectl get nodes --no-headers | grep -v control-plane | awk '{print \$1}'", returnStdout: true).trim()
+            def nodeIp = sh(script: "kubectl get node ${nodeName} -o jsonpath='{.status.addresses[?(@.type==\"InternalIP\")].address}'", returnStdout: true).trim()
             def servicePort = sh(script: "kubectl get svc gateway -n ${K8S_NAMESPACE} -o jsonpath='{.spec.ports[0].nodePort}'", returnStdout: true).trim()
             echo "Access the application at: http://${nodeIp}:${servicePort}"
             echo "Or use: http://petclinic.local:${servicePort} (after adding '${nodeIp} petclinic.local' to /etc/hosts)"
         }
     }
 }
+
     }
     post {
         always {
