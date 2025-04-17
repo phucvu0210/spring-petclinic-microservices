@@ -10,5 +10,5 @@ spec:
   - protocol: TCP
     port: {{ .Values.admin.port }}
     targetPort: {{ .Values.admin.port }}
-    nodePort: {{ add .Values.admin.port 20000 }}
+    nodePort: 30090
   type: NodePort

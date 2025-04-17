@@ -10,5 +10,5 @@ spec:
   - protocol: TCP
     port: {{ .Values.zipkin.port }}
     targetPort: {{ .Values.zipkin.port }}
-    nodePort: {{ add .Values.zipkin.port 20000 }}
+    nodePort: 30100
   type: NodePort

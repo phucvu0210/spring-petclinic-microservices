@@ -10,5 +10,5 @@ spec:
   - protocol: TCP
     port: {{ .Values.eureka.port }}
     targetPort: {{ .Values.eureka.port }}
-    nodePort: {{ add .Values.eureka.port 20000 }}
+    nodePort: 30080
   type: NodePort
