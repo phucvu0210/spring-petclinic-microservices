@@ -45,7 +45,7 @@ pipeline {
                         }
                     }
                     
-                    writeYaml file: 'helm/petclinic/values.yaml', data: values
+                    writeYaml file: 'helm/petclinic/values.yaml', data: values, overwrite: true
                 }
             }
         }
