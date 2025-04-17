@@ -19,7 +19,6 @@ pipeline {
                 script {
                     def values = readYaml file: 'helm/petclinic/values.yaml'
                     
-                    // Map service parameters to Helm values keys using full names
                     def serviceBranchMapping = [
                         'adminServer': params.'admin-server',
                         'apiGateway': params.'api-gateway',
@@ -31,24 +30,25 @@ pipeline {
                         'visitsService': params.'visits-service'
                     ]
 
-                    serviceBranchMapping.each { serviceName, branchName ->
+                    serviceBranchMapping.each { serviceKey, branchName ->
                         if (branchName && branchName != 'main') {
                             def commitId = sh(script: "git ls-remote https://github.com/phucvu0210/spring-petclinic-microservices.git ${branchName} | awk '{print \$1}' | cut -c1-7", returnStdout: true).trim()
                             if (!commitId) {
-                                error "Could not find commit ID for branch ${branchName} of ${serviceName}"
+                                error "Could not find commit ID for branch ${branchName} of ${serviceKey}"
                             }
-                            values[serviceName].tag = "${branchName}-${commitId}"
-                            echo "Updated tag for ${serviceName} to ${branchName}-${commitId}"
+                            values[serviceKey].tag = "${commitId}" 
+                            echo "Updated tag for ${serviceKey} to ${commitId}"
                         } else {
-                            values[serviceName].tag = 'latest'
-                            echo "Using latest tag for ${serviceName} (branch: main)"
+                            values[serviceKey].tag = 'latest'   
+                            echo "Using latest tag for ${serviceKey} (branch: main)"
                         }
                     }
-                    
+
                     writeYaml file: 'helm/petclinic/values.yaml', data: values, overwrite: true
                 }
-            }
+           }
         }
+
         stage('Deploy with Helm') {
             steps {
                 script {
