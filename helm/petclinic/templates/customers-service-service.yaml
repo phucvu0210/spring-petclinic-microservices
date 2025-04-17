@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: customers
+  name: customers-service
   namespace: {{ .Release.Namespace }}
 spec:
   selector:
-    app: customers
+    app: customers-service
   ports:
   - protocol: TCP
-    port: {{ .Values.customers.port }}
-    targetPort: {{ .Values.customers.port }}
+    port: {{ .Values.customers-service.port }}
+    targetPort: {{ .Values.customers-service.port }}
     nodePort: 30130
   type: NodePort

@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: admin
+  name: api-gateway
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: admin
+      app: api-gateway
   template:
     metadata:
       labels:
-        app: admin
+        app: api-gateway
     spec:
       containers:
-      - name: admin
-        image: {{ .Values.admin.repository }}:{{ .Values.admin.tag }}
+      - name: api-gateway
+        image: {{ .Values.api-gateway.repository }}:{{ .Values.api-gateway.tag }}
         ports:
-        - containerPort: {{ .Values.admin.port }}
+        - containerPort: {{ .Values.api-gateway.port }}
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: docker

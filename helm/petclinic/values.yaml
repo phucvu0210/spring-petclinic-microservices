@@ -1,36 +1,32 @@
-eureka:
-  repository: phucvu0210/spring-petclinic-discovery-server
-  tag: latest
-  port: 8761
-admin:
+admin-server:
   repository: phucvu0210/spring-petclinic-admin-server
   tag: latest
   port: 9090
-zipkin:
-  repository: openzipkin/zipkin
-  tag: latest
-  port: 9411
-gateway:
+api-gateway:
   repository: phucvu0210/spring-petclinic-api-gateway
   tag: latest
   port: 8080
-config:
+config-server:
   repository: phucvu0210/spring-petclinic-config-server
   tag: latest
   port: 8888
-customers:
+customers-service:
   repository: phucvu0210/spring-petclinic-customers-service
   tag: latest
   port: 8081
-genai:
+discovery-server:
+  repository: phucvu0210/spring-petclinic-discovery-server
+  tag: latest
+  port: 8761
+genai-service:
   repository: phucvu0210/spring-petclinic-genai-service
   tag: latest
   port: 8084
-vets:
+vets-service:
   repository: phucvu0210/spring-petclinic-vets-service
   tag: latest
   port: 8083
-visits:
+visits-service:
   repository: phucvu0210/spring-petclinic-visits-service
   tag: latest
   port: 8082

@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: genai
+  name: admin-server
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: genai
+      app: admin-server
   template:
     metadata:
       labels:
-        app: genai
+        app: admin-server
     spec:
       containers:
-      - name: genai
-        image: {{ .Values.genai.repository }}:{{ .Values.genai.tag }}
+      - name: admin-server
+        image: {{ .Values.admin-server.repository }}:{{ .Values.admin-server.tag }}
         ports:
-        - containerPort: {{ .Values.genai.port }}
+        - containerPort: {{ .Values.admin-server.port }}
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: docker

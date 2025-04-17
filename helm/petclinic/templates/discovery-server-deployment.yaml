@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: zipkin
+  name: discovery-server
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: zipkin
+      app: discovery-server
   template:
     metadata:
       labels:
-        app: zipkin
+        app: discovery-server
     spec:
       containers:
-      - name: zipkin
-        image: {{ .Values.zipkin.repository }}:{{ .Values.zipkin.tag }}
+      - name: discovery-server
+        image: {{ .Values.discovery-server.repository }}:{{ .Values.discovery-server.tag }}
         ports:
-        - containerPort: {{ .Values.zipkin.port }}
+        - containerPort: {{ .Values.discovery-server.port }}
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: docker

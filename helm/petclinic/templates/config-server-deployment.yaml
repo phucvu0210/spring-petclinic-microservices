@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: visits
+  name: config-server
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: visits
+      app: config-server
   template:
     metadata:
       labels:
-        app: visits
+        app: config-server
     spec:
       containers:
-      - name: visits
-        image: {{ .Values.visits.repository }}:{{ .Values.visits.tag }}
+      - name: config-server
+        image: {{ .Values.config-server.repository }}:{{ .Values.config-server.tag }}
         ports:
-        - containerPort: {{ .Values.visits.port }}
+        - containerPort: {{ .Values.config-server.port }}
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: docker

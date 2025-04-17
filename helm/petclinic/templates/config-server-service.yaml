@@ -5,10 +5,10 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   selector:
-    app: config
+    app: config-server
   ports:
   - protocol: TCP
-    port: {{ .Values.config.port }}
-    targetPort: {{ .Values.config.port }}
+    port: {{ .Values.config-server.port }}
+    targetPort: {{ .Values.config-server.port }}
     nodePort: 30120
   type: NodePort

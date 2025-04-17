@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: eureka
+  name: genai-service
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: eureka
+      app: genai-service
   template:
     metadata:
       labels:
-        app: eureka
+        app: genai-service
     spec:
       containers:
-      - name: eureka
-        image: {{ .Values.eureka.repository }}:{{ .Values.eureka.tag }}
+      - name: genai-service
+        image: {{ .Values.genai-service.repository }}:{{ .Values.genai-service.tag }}
         ports:
-        - containerPort: {{ .Values.eureka.port }}
+        - containerPort: {{ .Values.genai-service.port }}
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: docker
