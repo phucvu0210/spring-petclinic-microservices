@@ -21,3 +21,37 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: docker
+        - name: SPRING_CONFIG_IMPORT
+          value: optional:configserver:http://config-server:8888
+        - name: SPRING_LOGGING_FILE_NAME
+          value: ""
+        - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+          value: "true"
+        - name: EUREKA_INSTANCE_HOSTNAME
+          value: admin-server
+        - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+          value: http://discovery-server:8761/eureka/
+        - name: EUREKA_CLIENT_REGISTRY_FETCH_INTERVAL_SECONDS
+          value: "5"
+        - name: EUREKA_CLIENT_INSTANCE_INFO_REPLICATION_INTERVAL_SECONDS
+          value: "5"
+        - name: EUREKA_CLIENT_INITIAL_INSTANCE_INFO_REPLICATION_INTERVAL_SECONDS
+          value: "5"
+        - name: SPRING_BOOT_ADMIN_CLIENT_PERIOD
+          value: "30000"  # 30 giây, tránh lỗi FluxInterval
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: {{ .Values.adminServer.port }}
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          timeoutSeconds: 2
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: {{ .Values.adminServer.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 2

@@ -21,3 +21,29 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: docker
+        - name: SPRING_CONFIG_IMPORT
+          value: optional:configserver:http://config-server:8888
+        - name: SPRING_LOGGING_FILE_NAME
+          value: ""
+        - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+          value: "true"
+        - name: EUREKA_INSTANCE_HOSTNAME
+          value: discovery-server
+        - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+          value: http://discovery-server:8761/eureka/
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: {{ .Values.discoveryServer.port }}
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          timeoutSeconds: 2
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: {{ .Values.discoveryServer.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 2

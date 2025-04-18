@@ -18,3 +18,19 @@ spec:
         image: {{ .Values.tracingServer.repository }}:{{ .Values.tracingServer.tag }}
         ports:
         - containerPort: {{ .Values.tracingServer.port }}
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        readinessProbe:
+          httpGet:
+            path: /api/v2/services
+            port: {{ .Values.tracingServer.port }}
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          timeoutSeconds: 2
+        livenessProbe:
+          httpGet:
+            path: /api/v2/services
+            port: {{ .Values.tracingServer.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 2

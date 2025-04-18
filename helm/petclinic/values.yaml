@@ -12,7 +12,7 @@ apiGateway:
   repository: phucvu0210/spring-petclinic-api-gateway
   tag: latest
   port: 8080
-  nodePort: 30110
+  nodePort: 30080
 configServer:
   repository: phucvu0210/spring-petclinic-config-server
   tag: latest
@@ -27,7 +27,7 @@ discoveryServer:
   repository: phucvu0210/spring-petclinic-discovery-server
   tag: latest
   port: 8761
-  nodePort: 30080
+  nodePort: 30110
 genaiService:
   repository: phucvu0210/spring-petclinic-genai-service
   tag: latest
@@ -43,3 +43,10 @@ visitsService:
   tag: latest
   port: 8082
   nodePort: 30160
+resources:
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+  requests:
+    cpu: "200m"
+    memory: "256Mi"
