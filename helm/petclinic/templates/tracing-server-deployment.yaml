@@ -19,18 +19,25 @@ spec:
         ports:
         - containerPort: {{ .Values.tracingServer.port }}
         resources:
-          {{- toYaml .Values.resources | nindent 12 }}
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+          requests:
+            cpu: "50m"
+            memory: "64Mi"
         readinessProbe:
           httpGet:
             path: /api/v2/services
             port: {{ .Values.tracingServer.port }}
-          initialDelaySeconds: 3
-          periodSeconds: 5
-          timeoutSeconds: 2
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 5
         livenessProbe:
           httpGet:
             path: /api/v2/services
             port: {{ .Values.tracingServer.port }}
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 2
+          initialDelaySeconds: 60
+          periodSeconds: 15
+          timeoutSeconds: 3
+          failureThreshold: 5

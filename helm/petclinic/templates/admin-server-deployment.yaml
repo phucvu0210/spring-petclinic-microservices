@@ -32,26 +32,33 @@ spec:
         - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
           value: http://discovery-server:8761/eureka/
         - name: EUREKA_CLIENT_REGISTRY_FETCH_INTERVAL_SECONDS
-          value: "5"
-        - name: EUREKA_CLIENT_INSTANCE_INFO_REPLICATION_INTERVAL_SECONDS
-          value: "5"
-        - name: EUREKA_CLIENT_INITIAL_INSTANCE_INFO_REPLICATION_INTERVAL_SECONDS
-          value: "5"
+          value: "10"
+        - name: EUREKA_CLIENT_EUREKA_SERVER_CONNECT_TIMEOUT_SECONDS
+          value: "15"
+        - name: EUREKA_CLIENT_EUREKA_SERVER_READ_TIMEOUT_SECONDS
+          value: "15"
         - name: SPRING_BOOT_ADMIN_CLIENT_PERIOD
-          value: "30000"  # 30 giây, tránh lỗi FluxInterval
+          value: "30000"
         resources:
-          {{- toYaml .Values.resources | nindent 12 }}
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+          requests:
+            cpu: "50m"
+            memory: "64Mi"
         readinessProbe:
           httpGet:
             path: /actuator/health
             port: {{ .Values.adminServer.port }}
-          initialDelaySeconds: 3
-          periodSeconds: 5
-          timeoutSeconds: 2
+          initialDelaySeconds: 20  # Tăng để chờ ứng dụng khởi động
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 10  # Cho phép nhiều lần thử
         livenessProbe:
           httpGet:
             path: /actuator/health
             port: {{ .Values.adminServer.port }}
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 2
+          initialDelaySeconds: 90
+          periodSeconds: 15
+          timeoutSeconds: 3
+          failureThreshold: 10

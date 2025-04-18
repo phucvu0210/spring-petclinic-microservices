@@ -45,7 +45,7 @@ visitsService:
   nodePort: 30160
 resources:
   limits:
-    cpu: "500m"
+    cpu: "700m"
     memory: "512Mi"
   requests:
     cpu: "200m"
