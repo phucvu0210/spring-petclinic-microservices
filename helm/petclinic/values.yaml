@@ -43,10 +43,3 @@ visitsService:
   tag: latest
   port: 8082
   nodePort: 30160
-resources:
-  limits:
-    cpu: "700m"
-    memory: "512Mi"
-  requests:
-    cpu: "200m"
-    memory: "256Mi"
