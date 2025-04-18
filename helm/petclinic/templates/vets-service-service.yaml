@@ -10,5 +10,5 @@ spec:
   - protocol: TCP
     port: {{ .Values.vetsService.port }}
     targetPort: {{ .Values.vetsService.port }}
-    nodePort: 30150
+    nodePort: {{ .Values.vetsService.nodePort }}
   type: NodePort

@@ -10,5 +10,5 @@ spec:
   - protocol: TCP
     port: {{ .Values.apiGateway.port }}
     targetPort: {{ .Values.apiGateway.port }}
-    nodePort: 30110
+    nodePort: {{ .Values.apiGateway.nodePort }}
   type: NodePort

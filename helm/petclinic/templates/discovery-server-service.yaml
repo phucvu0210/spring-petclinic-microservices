@@ -10,5 +10,5 @@ spec:
   - protocol: TCP
     port: {{ .Values.discoveryServer.port }}
     targetPort: {{ .Values.discoveryServer.port }}
-    nodePort: 30080
+    nodePort: {{ .Values.discoveryServer.nodePort }}
   type: NodePort

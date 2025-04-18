@@ -10,5 +10,5 @@ spec:
   - protocol: TCP
     port: {{ .Values.visitsService.port }}
     targetPort: {{ .Values.visitsService.port }}
-    nodePort: 30160
+    nodePort: {{ .Values.visitsService.nodePort }}
   type: NodePort

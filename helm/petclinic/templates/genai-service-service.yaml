@@ -10,5 +10,5 @@ spec:
   - protocol: TCP
     port: {{ .Values.genaiService.port }}
     targetPort: {{ .Values.genaiService.port }}
-    nodePort: 30140
+    nodePort: {{ .Values.genaiService.nodePort }}
   type: NodePort
