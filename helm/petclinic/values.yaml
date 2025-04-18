@@ -27,7 +27,7 @@ discoveryServer:
   repository: phucvu0210/spring-petclinic-discovery-server
   tag: latest
   port: 8761
-  nodePort: 30110
+  nodePort: 30111
 genaiService:
   repository: phucvu0210/spring-petclinic-genai-service
   tag: latest

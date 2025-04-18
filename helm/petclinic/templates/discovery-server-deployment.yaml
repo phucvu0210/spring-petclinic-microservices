@@ -21,8 +21,8 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: docker
-        - name: SPRING_CONFIG_IMPORT
-          value: optional:configserver:http://config-server:8888
+        - name: SPRING_CLOUD_CONFIG_URI
+          value: http://config-server:8888
         - name: SPRING_LOGGING_FILE_NAME
           value: ""
         - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
@@ -34,6 +34,6 @@ spec:
         - name: EUREKA_CLIENT_REGISTRY_FETCH_INTERVAL_SECONDS
           value: "10"
         - name: EUREKA_CLIENT_EUREKA_SERVER_CONNECT_TIMEOUT_SECONDS
-          value: "60"
+          value: "120"
         - name: EUREKA_CLIENT_EUREKA_SERVER_READ_TIMEOUT_SECONDS
-          value: "60"
+          value: "120"
