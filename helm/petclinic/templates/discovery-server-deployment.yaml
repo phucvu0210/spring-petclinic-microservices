@@ -34,6 +34,6 @@ spec:
         - name: EUREKA_CLIENT_REGISTRY_FETCH_INTERVAL_SECONDS
           value: "10"
         - name: EUREKA_CLIENT_EUREKA_SERVER_CONNECT_TIMEOUT_SECONDS
-          value: "120"
+          value: "300"
         - name: EUREKA_CLIENT_EUREKA_SERVER_READ_TIMEOUT_SECONDS
-          value: "120"
+          value: "300"
