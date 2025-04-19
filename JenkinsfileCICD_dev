@@ -136,7 +136,7 @@ pipeline {
                         echo "Updated Docker image tag for ${svc} to ${env.COMMIT_ID}"
                     }
 
-                    writeYaml file: 'helm/petclinic/values.yaml', data: values, overwrite: true
+                    writeYaml file: 'helm/petclinic/values-dev.yaml', data: values, overwrite: true
                 }
             }
         }

@@ -134,7 +134,7 @@ pipeline {
                         echo "Updated Docker image tag for ${svc} to ${env.RELEASE_TAG}"
                     }
 
-                    writeYaml file: 'helm/petclinic/values.yaml', data: values, overwrite: true
+                    writeYaml file: 'helm/petclinic/values-staging.yaml', data: values, overwrite: true
                 }
             }
         }
