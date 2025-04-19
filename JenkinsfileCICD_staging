@@ -11,7 +11,7 @@ pipeline {
                 script {
                     def branchName = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
                     if (branchName == 'HEAD') {
-                        branchName = sh(script: 'git branch --contains HEAD | grep -v detached | sed "s/* //" || echo HEAD"', returnStdout: true).trim()
+                        branchName = sh(script: 'git for-each-ref --format="%(refname:short)" refs/heads | grep "$(git rev-parse --short HEAD)" || echo "HEAD"', returnStdout: true).trim()
                     }
 
                     echo "Current branch: ${branchName}"
