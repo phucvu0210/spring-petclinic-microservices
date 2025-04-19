@@ -11,7 +11,8 @@ pipeline {
             steps {
                 script {
                     git branch: 'main', url: 'https://github.com/phucvu0210/spring-petclinic-microservices.git'
-                    def gitTag = params.RELEASE_TAG ?: sh(script: 'git describe --tags --exact-match 2>/dev/null || true', returnStdout: true).trim()
+                    sh 'git fetch --tags'
+                    def gitTag = params.RELEASE_TAG ?: sh(script: 'git describe --tags --abbrev=0 2>/dev/null || true', returnStdout: true).trim()
                     if (!gitTag) {
                         error "No release tag found. Please specify RELEASE_TAG or push a release tag (e.g., v1.2.3)."
                     }
@@ -24,9 +25,9 @@ pipeline {
             steps {
                 script {
                     def values = readYaml file: 'helm/petclinic/values.yaml'
-                    
+
                     values.releaseTag = env.RELEASE_TAG
-                    
+
                     def serviceKeys = [
                         'adminServer',
                         'apiGateway',

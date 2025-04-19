@@ -8,13 +8,16 @@ pipeline {
             steps {
                 script {
                     def branchToCheckout = env.BRANCH_NAME ?: 'main'
+                    git branch: branchToCheckout, url: 'https://github.com/phucvu0210/spring-petclinic-microservices.git'
+                    sh 'git fetch --tags'
                     def gitTag = sh(script: 'git describe --tags --exact-match 2>/dev/null || true', returnStdout: true).trim()
                     env.TAG_NAME = gitTag
+
                     echo "Checking out branch: ${branchToCheckout}, Tag: ${gitTag}"
-                    git branch: branchToCheckout, url: 'https://github.com/phucvu0210/spring-petclinic-microservices.git'
                 }
             }
         }
+
         stage('Build JAR') {
             steps {
                 script {
@@ -23,11 +26,13 @@ pipeline {
                 }
             }
         }
+
         stage('Build and Push Docker Images') {
             steps {
                 script {
                     def commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-                    def imageTag = env.TAG_NAME ? env.TAG_NAME : commitId 
+                    def imageTag = env.TAG_NAME ? env.TAG_NAME : commitId
+
                     def changedFiles = sh(script: "git diff --name-only HEAD^ HEAD || true", returnStdout: true).trim().split('\n')
                     def serviceConfigs = [
                         [name: 'admin-server', dir: 'spring-petclinic-admin-server', port: 9090],
