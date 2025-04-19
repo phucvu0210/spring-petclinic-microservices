@@ -1,16 +1,28 @@
 pipeline {
     agent any
-    environment {
-        K8S_NAMESPACE = 'dev'
+    parameters {
+        choice(name: 'K8S_NAMESPACE', choices: ['dev', 'staging'], description: 'Select the namespace to cleanup (dev or staging)')
     }
     stages {
         stage('Cleanup Deployment') {
             steps {
                 script {
-                    sh "helm uninstall petclinic --namespace ${K8S_NAMESPACE} || true"
-                    sh "kubectl delete namespace ${K8S_NAMESPACE} || true"
+                    echo "Cleaning up deployment in namespace: ${params.K8S_NAMESPACE}"
+                    sh "helm uninstall petclinic --namespace ${params.K8S_NAMESPACE} || true"
+                    sh "kubectl delete namespace ${params.K8S_NAMESPACE} || true"
                 }
             }
+        }
+    }
+    post {
+        always {
+            echo "Cleanup process completed."
+        }
+        success {
+            echo "Successfully cleaned up deployment in namespace ${params.K8S_NAMESPACE}."
+        }
+        failure {
+            echo "Cleanup failed. Check logs for details."
         }
     }
 }
