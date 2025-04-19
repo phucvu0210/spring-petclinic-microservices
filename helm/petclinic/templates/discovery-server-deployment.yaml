@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: discovery-server
-        image: {{ .Values.discoveryServer.repository }}:{{ .Values.discoveryServer.tag }}
+        image: "{{ .Values.discoveryServer.repository }}:{{ .Values.discoveryServer.tag }}"
         ports:
         - containerPort: {{ .Values.discoveryServer.port }}
         env:

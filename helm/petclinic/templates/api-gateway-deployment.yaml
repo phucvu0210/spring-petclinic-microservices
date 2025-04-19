@@ -28,7 +28,7 @@ spec:
         - "until nc -z config-server 8888; do echo 'Waiting for config-server...'; sleep 5; done"
       containers:
       - name: api-gateway
-        image: {{ .Values.apiGateway.repository }}:{{ .Values.apiGateway.tag }}
+        image: "{{ .Values.apiGateway.repository }}:{{ .Values.apiGateway.tag }}"
         ports:
         - containerPort: {{ .Values.apiGateway.port }}
         env:

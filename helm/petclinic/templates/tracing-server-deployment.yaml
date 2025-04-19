@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
       - name: tracing-server
-        image: {{ .Values.tracingServer.repository }}:{{ .Values.tracingServer.tag }}
+        image: "{{ .Values.tracingServer.repository }}:{{ .Values.tracingServer.tag }}"
         ports:
         - containerPort: {{ .Values.tracingServer.port }}

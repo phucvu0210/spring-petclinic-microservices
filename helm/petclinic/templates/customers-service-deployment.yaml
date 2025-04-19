@@ -22,7 +22,7 @@ spec:
         - "until nc -z discovery-server 8761; do echo 'Waiting for discovery-server...'; sleep 5; done"
       containers:
       - name: customers-service
-        image: {{ .Values.customersService.repository }}:{{ .Values.customersService.tag }}
+        image: "{{ .Values.customersService.repository }}:{{ .Values.customersService.tag }}"
         ports:
         - containerPort: {{ .Values.customersService.port }}
         env:
