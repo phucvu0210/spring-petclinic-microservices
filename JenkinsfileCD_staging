@@ -39,8 +39,7 @@ pipeline {
                         'discoveryServer',
                         'genaiService',
                         'vetsService',
-                        'visitsService',
-                        'tracingServer'
+                        'visitsService'
                     ]
 
                     serviceKeys.each { serviceKey ->
