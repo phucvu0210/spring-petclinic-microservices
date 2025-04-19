@@ -3,30 +3,39 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
         K8S_NAMESPACE = 'dev'
-        SHOULD_RUN_PIPELINE = 'true'
     }
 
     stages {
         stage('Checkout Code') {
             steps {
                 script {
-                    // Lấy tên nhánh từ biến môi trường hoặc từ git
+                    // Lấy tên nhánh từ env.BRANCH_NAME hoặc git
                     def branchName = env.BRANCH_NAME ?: sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
                     echo "Branch hiện tại: ${branchName}"
 
+                    // Sử dụng biến cục bộ để kiểm soát pipeline
+                    def shouldRunPipeline = true
                     if (branchName != 'main') {
                         echo "Không phải nhánh main. Pipeline sẽ bỏ qua các bước tiếp theo."
-                        env.SHOULD_RUN_PIPELINE = 'false'
-                        return
+                        shouldRunPipeline = false
+                    } else {
+                        // Checkout nhánh main
+                        checkout([$class: 'GitSCM', 
+                                  branches: [[name: '*/main']], 
+                                  userRemoteConfigs: [[url: 'https://github.com/phucvu0210/spring-petclinic-microservices.git']]])
+                        sh 'git fetch --tags'
+
+                        env.TAG_NAME = sh(script: 'git describe --tags --exact-match 2>/dev/null || true', returnStdout: true).trim()
+                        if (env.TAG_NAME) {
+                            echo "Commit hiện tại có tag (${env.TAG_NAME}). Pipeline chỉ chạy trên commit chưa được gắn tag."
+                            shouldRunPipeline = false
+                        }
                     }
 
-                    git branch: 'main', url: 'https://github.com/phucvu0210/spring-petclinic-microservices.git'
-                    sh 'git fetch --tags'
+                    // Gán giá trị vào biến môi trường
+                    env.SHOULD_RUN_PIPELINE = shouldRunPipeline.toString()
 
-                    env.TAG_NAME = sh(script: 'git describe --tags --exact-match 2>/dev/null || true', returnStdout: true).trim()
-                    if (env.TAG_NAME) {
-                        echo "Commit hiện tại có tag (${env.TAG_NAME}). Pipeline chỉ chạy trên commit chưa được gắn tag."
-                        env.SHOULD_RUN_PIPELINE = 'false'
+                    if (!shouldRunPipeline) {
                         return
                     }
 
@@ -41,7 +50,13 @@ pipeline {
                 expression { return env.SHOULD_RUN_PIPELINE == 'true' }
             }
             steps {
-                sh './mvnw clean package -DskipTests'
+                script {
+                    if (env.SHOULD_RUN_PIPELINE != 'true') {
+                        echo "Bỏ qua stage Build JAR vì nhánh không phải main hoặc commit có tag."
+                        return
+                    }
+                    sh './mvnw clean package -DskipTests'
+                }
             }
         }
 
@@ -51,6 +66,11 @@ pipeline {
             }
             steps {
                 script {
+                    if (env.SHOULD_RUN_PIPELINE != 'true') {
+                        echo "Bỏ qua stage Build and Push Docker Images vì nhánh không phải main hoặc commit có tag."
+                        return
+                    }
+
                     def imageTag = env.COMMIT_ID
                     def serviceConfigs = [
                         [name: 'admin-server', dir: 'spring-petclinic-admin-server', port: 9090],
@@ -101,6 +121,11 @@ pipeline {
             }
             steps {
                 script {
+                    if (env.SHOULD_RUN_PIPELINE != 'true') {
+                        echo "Bỏ qua stage Update Helm Values vì nhánh không phải main hoặc commit có tag."
+                        return
+                    }
+
                     def values = readYaml file: 'helm/petclinic/values.yaml'
                     values.releaseTag = env.COMMIT_ID
 
@@ -131,6 +156,11 @@ pipeline {
             }
             steps {
                 script {
+                    if (env.SHOULD_RUN_PIPELINE != 'true') {
+                        echo "Bỏ qua stage Deploy to Kubernetes vì nhánh không phải main hoặc commit có tag."
+                        return
+                    }
+
                     sh "helm upgrade --install petclinic helm/petclinic --namespace ${K8S_NAMESPACE} --create-namespace -f helm/petclinic/values-dev.yaml"
                 }
             }
@@ -142,6 +172,11 @@ pipeline {
             }
             steps {
                 script {
+                    if (env.SHOULD_RUN_PIPELINE != 'true') {
+                        echo "Bỏ qua stage Print Access Info vì nhánh không phải main hoặc commit có tag."
+                        return
+                    }
+
                     def nodeName = sh(script: "kubectl get nodes --no-headers | grep -v control-plane | awk '{print \$1}'", returnStdout: true).trim()
                     def nodeIp = sh(script: "kubectl get node ${nodeName} -o jsonpath='{.status.addresses[?(@.type==\"InternalIP\")].address}'", returnStdout: true).trim()
                     def servicePort = sh(script: "kubectl get svc api-gateway -n ${K8S_NAMESPACE} -o jsonpath='{.spec.ports[0].nodePort}'", returnStdout: true).trim()
