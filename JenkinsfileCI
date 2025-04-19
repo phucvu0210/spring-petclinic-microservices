@@ -2,7 +2,6 @@ pipeline {
     agent any
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
-        SHOULD_RUN_PIPELINE = 'true'
     }
 
     stages {
@@ -13,9 +12,17 @@ pipeline {
                     def branchToCheckout = env.BRANCH_NAME ?: sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
                     echo "Branch hiện tại: ${branchToCheckout}"
 
+                    // Sử dụng biến cục bộ để kiểm soát pipeline
+                    def shouldRunPipeline = true
                     if (branchToCheckout == 'main') {
                         echo "Đây là nhánh 'main'. Pipeline sẽ dừng lại và vẫn được đánh dấu SUCCESS."
-                        env.SHOULD_RUN_PIPELINE = 'false'
+                        shouldRunPipeline = false
+                    }
+
+                    // Lưu giá trị vào biến môi trường để sử dụng trong các stage sau
+                    env.SHOULD_RUN_PIPELINE = shouldRunPipeline.toString()
+
+                    if (!shouldRunPipeline) {
                         return
                     }
 
@@ -32,7 +39,14 @@ pipeline {
                 expression { return env.SHOULD_RUN_PIPELINE == 'true' }
             }
             steps {
-                sh './mvnw clean package -DskipTests'
+                script {
+                    // Kiểm tra bổ sung để đảm bảo không chạy trên nhánh main
+                    if (env.SHOULD_RUN_PIPELINE != 'true') {
+                        echo "Bỏ qua stage Build JAR vì nhánh là main."
+                        return
+                    }
+                    sh './mvnw clean package -DskipTests'
+                }
             }
         }
 
@@ -42,8 +56,14 @@ pipeline {
             }
             steps {
                 script {
+                    // Kiểm tra bổ sung để đảm bảo không chạy trên nhánh main
+                    if (env.SHOULD_RUN_PIPELINE != 'true') {
+                        echo "Bỏ qua stage Build and Push Docker Images vì nhánh là main."
+                        return
+                    }
+
                     def commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-                    // Xử lý git diff an toàn hơn
+                    // Xử lý git diff an toàn
                     def changedFiles = sh(script: 'git diff --name-only HEAD^ HEAD 2>/dev/null || git ls-files', returnStdout: true).trim().split('\n')
                     def serviceConfigs = [
                         [name: 'admin-server', dir: 'spring-petclinic-admin-server', port: 9090],
