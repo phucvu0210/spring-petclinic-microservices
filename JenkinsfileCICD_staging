@@ -115,7 +115,7 @@ pipeline {
                         return
                     }
 
-                    def values = readYaml file: 'helm/petclinic/values.yaml'
+                    def values = readYaml file: 'helm/petclinic/values-staging.yaml'
                     values.releaseTag = env.RELEASE_TAG
 
                     def services = [
