@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        K8S_NAMESPACE = 'dev'
+        K8S_NAMESPACE = 'services'
     }
     parameters {
         string(name: 'admin-server', defaultValue: 'main', description: 'Branch for admin-server (e.g., dev_admin_server)')

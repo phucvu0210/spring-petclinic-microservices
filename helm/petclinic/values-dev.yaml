@@ -1,4 +1,4 @@
-# Release tag (default)
+# Release tag (for dev deployment)
 releaseTag: latest
 
 # Service configurations
@@ -6,52 +6,52 @@ adminServer:
   repository: phucvu0210/spring-petclinic-admin-server
   tag: latest
   port: 9090
-  nodePort: 30090
+  nodePort: 32090
 
 tracingServer:
   repository: openzipkin/zipkin
   tag: latest
   port: 9411
-  nodePort: 30100
+  nodePort: 32100
 
 apiGateway:
   repository: phucvu0210/spring-petclinic-api-gateway
   tag: latest
   port: 8080
-  nodePort: 30080
+  nodePort: 32080
 
 configServer:
   repository: phucvu0210/spring-petclinic-config-server
   tag: latest
   port: 8888
-  nodePort: 30120
+  nodePort: 32120
 
 customersService:
   repository: phucvu0210/spring-petclinic-customers-service
   tag: latest
   port: 8081
-  nodePort: 30130
+  nodePort: 32130
 
 discoveryServer:
   repository: phucvu0210/spring-petclinic-discovery-server
   tag: latest
   port: 8761
-  nodePort: 30110
+  nodePort: 32110
 
 genaiService:
   repository: phucvu0210/spring-petclinic-genai-service
   tag: latest
   port: 8084
-  nodePort: 30140
+  nodePort: 32140
 
 vetsService:
   repository: phucvu0210/spring-petclinic-vets-service
   tag: latest
   port: 8083
-  nodePort: 30150
+  nodePort: 32150
 
 visitsService:
   repository: phucvu0210/spring-petclinic-visits-service
   tag: latest
   port: 8082
-  nodePort: 30160
+  nodePort: 32160

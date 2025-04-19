@@ -1,7 +1,7 @@
 pipeline {
     agent any
     parameters {
-        choice(name: 'K8S_NAMESPACE', choices: ['dev', 'staging'], description: 'Select the namespace to cleanup (dev or staging)')
+        choice(name: 'K8S_NAMESPACE', choices: ['services','dev', 'staging'], description: 'Select the namespace to cleanup (services or dev or staging)')
     }
     stages {
         stage('Cleanup Deployment') {

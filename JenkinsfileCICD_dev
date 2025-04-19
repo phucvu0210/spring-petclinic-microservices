@@ -1,0 +1,139 @@
+pipeline {
+    agent any
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
+        K8S_NAMESPACE = 'dev'
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/phucvu0210/spring-petclinic-microservices.git'
+                sh 'git fetch --tags'
+                script {
+                    env.TAG_NAME = sh(script: 'git describe --tags --exact-match 2>/dev/null || true', returnStdout: true).trim()
+                    if (env.TAG_NAME) {
+                        echo "Tag ${env.TAG_NAME} found. This pipeline is for untagged commits only. Aborting..."
+                        currentBuild.result = 'ABORTED'
+                        error("Aborting: Tag detected on main branch.")
+                    }
+                    env.COMMIT_ID = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    echo "Deploying commit: ${env.COMMIT_ID}"
+                }
+            }
+        }
+
+        stage('Build JAR') {
+            steps {
+                sh './mvnw clean package -DskipTests'
+            }
+        }
+
+        stage('Build and Push Docker Images') {
+            steps {
+                script {
+                    def imageTag = env.COMMIT_ID
+                    def serviceConfigs = [
+                        [name: 'admin-server', dir: 'spring-petclinic-admin-server', port: 9090],
+                        [name: 'api-gateway', dir: 'spring-petclinic-api-gateway', port: 8080],
+                        [name: 'config-server', dir: 'spring-petclinic-config-server', port: 8888],
+                        [name: 'customers-service', dir: 'spring-petclinic-customers-service', port: 8081],
+                        [name: 'discovery-server', dir: 'spring-petclinic-discovery-server', port: 8761],
+                        [name: 'genai-service', dir: 'spring-petclinic-genai-service', port: 8084],
+                        [name: 'vets-service', dir: 'spring-petclinic-vets-service', port: 8083],
+                        [name: 'visits-service', dir: 'spring-petclinic-visits-service', port: 8082]
+                    ]
+
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+
+                        for (def service in serviceConfigs) {
+                            def serviceDir = service.dir
+                            def serviceName = service.name
+                            def exposedPort = service.port
+                            def imageName = "${DOCKER_USERNAME}/spring-petclinic-${serviceName}:${imageTag}"
+                            def jarFile = sh(script: "ls ${serviceDir}/target/*.jar | head -1", returnStdout: true).trim()
+
+                            if (!jarFile) {
+                                error "No JAR file found for ${serviceName} in ${serviceDir}/target/"
+                            }
+
+                            echo "Building Docker image for ${serviceName} with tag ${imageTag}..."
+                            sh """
+                                mkdir -p docker
+                                cp ${jarFile} docker/${serviceName}.jar
+                                cd docker
+                                docker build --build-arg ARTIFACT_NAME=${serviceName} --build-arg EXPOSED_PORT=${exposedPort} -t ${imageName} .
+                                docker tag ${imageName} ${DOCKER_USERNAME}/spring-petclinic-${serviceName}:latest
+                                docker push ${imageName}
+                                docker push ${DOCKER_USERNAME}/spring-petclinic-${serviceName}:latest
+                                rm ${serviceName}.jar
+                                cd ..
+                            """
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Update Helm Values') {
+            steps {
+                script {
+                    def values = readYaml file: 'helm/petclinic/values.yaml'
+                    values.releaseTag = env.COMMIT_ID
+
+                    def services = [
+                        'adminServer',
+                        'apiGateway',
+                        'configServer',
+                        'customersService',
+                        'discoveryServer',
+                        'genaiService',
+                        'vetsService',
+                        'visitsService'
+                    ]
+
+                    services.each { svc ->
+                        values[svc].tag = env.COMMIT_ID
+                        echo "Updated Docker image tag for ${svc} to ${env.COMMIT_ID}"
+                    }
+
+                    writeYaml file: 'helm/petclinic/values.yaml', data: values, overwrite: true
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    sh "helm upgrade --install petclinic helm/petclinic --namespace ${K8S_NAMESPACE} --create-namespace -f helm/petclinic/values-dev.yaml"
+                }
+            }
+        }
+
+        stage('Print Access Info') {
+            steps {
+                script {
+                    def nodeName = sh(script: "kubectl get nodes --no-headers | grep -v control-plane | awk '{print \$1}'", returnStdout: true).trim()
+                    def nodeIp = sh(script: "kubectl get node ${nodeName} -o jsonpath='{.status.addresses[?(@.type==\"InternalIP\")].address}'", returnStdout: true).trim()
+                    def servicePort = sh(script: "kubectl get svc api-gateway -n ${K8S_NAMESPACE} -o jsonpath='{.spec.ports[0].nodePort}'", returnStdout: true).trim()
+                    echo "Access the application at: http://${nodeIp}:${servicePort}"
+                    echo "Or use: http://petclinic.local:${servicePort} (after adding '${nodeIp} petclinic.local' to /etc/hosts)"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Cleaning up workspace..."
+            cleanWs()
+        }
+        success {
+            echo "✅ Dev deployment completed successfully!"
+        }
+        failure {
+            echo "❌ Dev deployment failed. Check logs for details."
+        }
+    }
+}

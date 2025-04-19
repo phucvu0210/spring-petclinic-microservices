@@ -1,57 +1,57 @@
-# Release tag (default)
-releaseTag: latest
+# Release tag (will be overridden by Jenkins pipeline for staging)
+releaseTag: v1.2.3
 
 # Service configurations
 adminServer:
   repository: phucvu0210/spring-petclinic-admin-server
-  tag: latest
+  tag: v1.2.3
   port: 9090
-  nodePort: 30090
+  nodePort: 31090
 
 tracingServer:
   repository: openzipkin/zipkin
   tag: latest
   port: 9411
-  nodePort: 30100
+  nodePort: 31100
 
 apiGateway:
   repository: phucvu0210/spring-petclinic-api-gateway
-  tag: latest
+  tag: v1.2.3
   port: 8080
-  nodePort: 30080
+  nodePort: 31080
 
 configServer:
   repository: phucvu0210/spring-petclinic-config-server
-  tag: latest
+  tag: v1.2.3
   port: 8888
-  nodePort: 30120
+  nodePort: 31120
 
 customersService:
   repository: phucvu0210/spring-petclinic-customers-service
-  tag: latest
+  tag: v1.2.3
   port: 8081
-  nodePort: 30130
+  nodePort: 31130
 
 discoveryServer:
   repository: phucvu0210/spring-petclinic-discovery-server
-  tag: latest
+  tag: v1.2.3
   port: 8761
-  nodePort: 30110
+  nodePort: 31110
 
 genaiService:
   repository: phucvu0210/spring-petclinic-genai-service
-  tag: latest
+  tag: v1.2.3
   port: 8084
-  nodePort: 30140
+  nodePort: 31140
 
 vetsService:
   repository: phucvu0210/spring-petclinic-vets-service
-  tag: latest
+  tag: v1.2.3
   port: 8083
-  nodePort: 30150
+  nodePort: 31150
 
 visitsService:
   repository: phucvu0210/spring-petclinic-visits-service
-  tag: latest
+  tag: v1.2.3
   port: 8082
-  nodePort: 30160
+  nodePort: 31160
