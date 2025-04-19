@@ -9,40 +9,29 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 script {
-                    def branchName = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
-                    if (branchName == 'HEAD') {
-                        branchName = sh(script: 'git branch --contains HEAD | grep -v detached | sed \'s/* //\' || echo HEAD', returnStdout: true).trim()
-                    }
-                    echo "Branch hiện tại: ${branchName}"
+                    def currentCommit = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
 
-                    // Sử dụng biến cục bộ để kiểm soát pipeline
-                    def shouldRunPipeline = true
-                    if (branchName != 'main') {
-                        echo "Không phải nhánh main. Pipeline sẽ bỏ qua các bước tiếp theo."
-                        shouldRunPipeline = false
-                    } else {
-                        // Checkout nhánh main
-                        checkout([$class: 'GitSCM', 
-                                  branches: [[name: '*/main']], 
-                                  userRemoteConfigs: [[url: 'https://github.com/phucvu0210/spring-petclinic-microservices.git']]])
-                        sh 'git fetch --tags'
+                    sh 'git fetch origin main'
+                    sh 'git fetch --tags'
 
-                        env.TAG_NAME = sh(script: 'git describe --tags --exact-match 2>/dev/null || true', returnStdout: true).trim()
-                        if (env.TAG_NAME) {
-                            echo "Commit hiện tại có tag (${env.TAG_NAME}). Pipeline chỉ chạy trên commit chưa được gắn tag."
-                            shouldRunPipeline = false
-                        }
-                    }
-
-                    // Gán giá trị vào biến môi trường
-                    env.SHOULD_RUN_PIPELINE = shouldRunPipeline.toString()
-
-                    if (!shouldRunPipeline) {
+                    def isOnMain = sh(script: "git branch -r --contains ${currentCommit} | grep origin/main || true", returnStdout: true).trim()
+                    if (!isOnMain) {
+                        echo "❌ Commit hiện tại KHÔNG thuộc nhánh main. Bỏ qua pipeline."
+                        env.SHOULD_RUN_PIPELINE = 'false'
                         return
                     }
 
+                    def tagName = sh(script: "git describe --tags --exact-match ${currentCommit} 2>/dev/null || true", returnStdout: true).trim()
+                    if (tagName) {
+                        echo "❌ Commit hiện tại đã được gắn tag (${tagName}). Bỏ qua pipeline."
+                        env.SHOULD_RUN_PIPELINE = 'false'
+                        return
+                    }
+
+                    echo "✅ Commit hiện tại nằm trên nhánh main và chưa có tag. Tiếp tục pipeline."
+                    env.SHOULD_RUN_PIPELINE = 'true'
                     env.COMMIT_ID = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-                    echo "✅ Đang deploy commit: ${env.COMMIT_ID}"
+                    echo "Đang deploy commit: ${env.COMMIT_ID}"
                 }
             }
         }
