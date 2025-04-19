@@ -3,31 +3,51 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
         K8S_NAMESPACE = 'staging'
+        SHOULD_RUN_PIPELINE = 'true'
     }
 
     stages {
         stage('Checkout Code') {
             steps {
                 script {
+                    def branchName = env.BRANCH_NAME
+                    echo "Current branch: ${branchName}"
+
+                    if (branchName != 'main') {
+                        echo "This pipeline only runs on 'main' branch. Skipping..."
+                        env.SHOULD_RUN_PIPELINE = 'false'
+                        return
+                    }
+
                     git branch: 'main', url: 'https://github.com/phucvu0210/spring-petclinic-microservices.git'
                     sh 'git fetch --tags'
+
                     def gitTag = sh(script: 'git describe --tags --exact-match 2>/dev/null || true', returnStdout: true).trim()
                     if (!gitTag) {
-                        error "No Git tag found. Staging deployment requires a release tag (e.g., v1.2.3)."
+                        echo "No Git tag found. Skipping staging deployment."
+                        env.SHOULD_RUN_PIPELINE = 'false'
+                        return
                     }
+
                     env.RELEASE_TAG = gitTag
-                    echo "Working with release tag: ${env.RELEASE_TAG}"
+                    echo "✅ Working with release tag: ${env.RELEASE_TAG}"
                 }
             }
         }
 
         stage('Build JAR') {
+            when {
+                expression { env.SHOULD_RUN_PIPELINE == 'true' }
+            }
             steps {
                 sh './mvnw clean package -DskipTests'
             }
         }
 
         stage('Build and Push Docker Images') {
+            when {
+                expression { env.SHOULD_RUN_PIPELINE == 'true' }
+            }
             steps {
                 script {
                     def imageTag = env.RELEASE_TAG
@@ -73,6 +93,9 @@ pipeline {
         }
 
         stage('Update Helm Values') {
+            when {
+                expression { env.SHOULD_RUN_PIPELINE == 'true' }
+            }
             steps {
                 script {
                     def values = readYaml file: 'helm/petclinic/values.yaml'
@@ -100,6 +123,9 @@ pipeline {
         }
 
         stage('Deploy to Kubernetes') {
+            when {
+                expression { env.SHOULD_RUN_PIPELINE == 'true' }
+            }
             steps {
                 script {
                     sh "helm upgrade --install petclinic helm/petclinic --namespace ${K8S_NAMESPACE} --create-namespace -f helm/petclinic/values-staging.yaml"
@@ -108,6 +134,9 @@ pipeline {
         }
 
         stage('Print Access Info') {
+            when {
+                expression { env.SHOULD_RUN_PIPELINE == 'true' }
+            }
             steps {
                 script {
                     def nodeName = sh(script: "kubectl get nodes --no-headers | grep -v control-plane | awk '{print \$1}'", returnStdout: true).trim()
@@ -127,10 +156,10 @@ pipeline {
             cleanWs()
         }
         success {
-            echo "✅ Staging deployment completed successfully!"
+            echo "✅ Staging pipeline completed (or skipped successfully)."
         }
         failure {
-            echo "❌ Staging deployment failed. Check logs for details."
+            echo "❌ Staging pipeline failed. Check logs."
         }
     }
 }

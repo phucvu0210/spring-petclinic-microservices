@@ -2,24 +2,40 @@ pipeline {
     agent any
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
+        SHOULD_RUN_PIPELINE = 'true' // default: chạy
     }
+
     stages {
         stage('Checkout Code') {
             steps {
                 script {
                     def branchToCheckout = env.BRANCH_NAME
+                    echo "Branch hiện tại: ${branchToCheckout}"
+
+                    if (branchToCheckout == 'main') {
+                        echo "Đây là nhánh 'main'. Pipeline sẽ dừng lại và vẫn được đánh dấu SUCCESS."
+                        env.SHOULD_RUN_PIPELINE = 'false'
+                        return
+                    }
+
                     git branch: branchToCheckout, url: 'https://github.com/phucvu0210/spring-petclinic-microservices.git'
                 }
             }
         }
 
         stage('Build JAR') {
+            when {
+                expression { env.SHOULD_RUN_PIPELINE == 'true' }
+            }
             steps {
                 sh './mvnw clean package -DskipTests'
             }
         }
 
         stage('Build and Push Docker Images') {
+            when {
+                expression { env.SHOULD_RUN_PIPELINE == 'true' }
+            }
             steps {
                 script {
                     def commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
@@ -60,6 +76,12 @@ pipeline {
                     }
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Pipeline completed."
         }
     }
 }
