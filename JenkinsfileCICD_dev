@@ -3,18 +3,19 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
         K8S_NAMESPACE = 'dev'
-        SHOULD_RUN_PIPELINE = 'true' // mặc định chạy
+        SHOULD_RUN_PIPELINE = 'true'
     }
 
     stages {
         stage('Checkout Code') {
             steps {
                 script {
-                    def branchName = env.BRANCH_NAME
+                    // Lấy tên nhánh từ biến môi trường hoặc từ git
+                    def branchName = env.BRANCH_NAME ?: sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
                     echo "Branch hiện tại: ${branchName}"
 
                     if (branchName != 'main') {
-                        echo "Không phải nhánh main. Pipeline sẽ dừng lại nhẹ nhàng."
+                        echo "Không phải nhánh main. Pipeline sẽ bỏ qua các bước tiếp theo."
                         env.SHOULD_RUN_PIPELINE = 'false'
                         return
                     }
@@ -37,7 +38,7 @@ pipeline {
 
         stage('Build JAR') {
             when {
-                expression { env.SHOULD_RUN_PIPELINE == 'true' }
+                expression { return env.SHOULD_RUN_PIPELINE == 'true' }
             }
             steps {
                 sh './mvnw clean package -DskipTests'
@@ -46,7 +47,7 @@ pipeline {
 
         stage('Build and Push Docker Images') {
             when {
-                expression { env.SHOULD_RUN_PIPELINE == 'true' }
+                expression { return env.SHOULD_RUN_PIPELINE == 'true' }
             }
             steps {
                 script {
@@ -96,7 +97,7 @@ pipeline {
 
         stage('Update Helm Values') {
             when {
-                expression { env.SHOULD_RUN_PIPELINE == 'true' }
+                expression { return env.SHOULD_RUN_PIPELINE == 'true' }
             }
             steps {
                 script {
@@ -126,7 +127,7 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             when {
-                expression { env.SHOULD_RUN_PIPELINE == 'true' }
+                expression { return env.SHOULD_RUN_PIPELINE == 'true' }
             }
             steps {
                 script {
@@ -137,7 +138,7 @@ pipeline {
 
         stage('Print Access Info') {
             when {
-                expression { env.SHOULD_RUN_PIPELINE == 'true' }
+                expression { return env.SHOULD_RUN_PIPELINE == 'true' }
             }
             steps {
                 script {
@@ -157,7 +158,13 @@ pipeline {
             cleanWs()
         }
         success {
-            echo "✅ Dev pipeline completed (or skipped successfully)."
+            script {
+                if (env.SHOULD_RUN_PIPELINE == 'false') {
+                    echo "✅ Pipeline skipped successfully (not main branch or tagged commit)."
+                } else {
+                    echo "✅ Dev pipeline completed successfully."
+                }
+            }
         }
         failure {
             echo "❌ Dev pipeline failed. Check logs."

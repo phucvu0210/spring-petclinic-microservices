@@ -2,14 +2,15 @@ pipeline {
     agent any
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
-        SHOULD_RUN_PIPELINE = 'true' // default: chạy
+        SHOULD_RUN_PIPELINE = 'true'
     }
 
     stages {
         stage('Checkout Code') {
             steps {
                 script {
-                    def branchToCheckout = env.BRANCH_NAME
+                    // Lấy tên nhánh từ env.BRANCH_NAME hoặc git
+                    def branchToCheckout = env.BRANCH_NAME ?: sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
                     echo "Branch hiện tại: ${branchToCheckout}"
 
                     if (branchToCheckout == 'main') {
@@ -18,14 +19,17 @@ pipeline {
                         return
                     }
 
-                    git branch: branchToCheckout, url: 'https://github.com/phucvu0210/spring-petclinic-microservices.git'
+                    // Checkout nhánh động
+                    checkout([$class: 'GitSCM', 
+                              branches: [[name: "*/${branchToCheckout}"]], 
+                              userRemoteConfigs: [[url: 'https://github.com/phucvu0210/spring-petclinic-microservices.git']]])
                 }
             }
         }
 
         stage('Build JAR') {
             when {
-                expression { env.SHOULD_RUN_PIPELINE == 'true' }
+                expression { return env.SHOULD_RUN_PIPELINE == 'true' }
             }
             steps {
                 sh './mvnw clean package -DskipTests'
@@ -34,12 +38,13 @@ pipeline {
 
         stage('Build and Push Docker Images') {
             when {
-                expression { env.SHOULD_RUN_PIPELINE == 'true' }
+                expression { return env.SHOULD_RUN_PIPELINE == 'true' }
             }
             steps {
                 script {
                     def commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-                    def changedFiles = sh(script: "git diff --name-only HEAD^ HEAD || true", returnStdout: true).trim().split('\n')
+                    // Xử lý git diff an toàn hơn
+                    def changedFiles = sh(script: 'git diff --name-only HEAD^ HEAD 2>/dev/null || git ls-files', returnStdout: true).trim().split('\n')
                     def serviceConfigs = [
                         [name: 'admin-server', dir: 'spring-petclinic-admin-server', port: 9090],
                         [name: 'api-gateway', dir: 'spring-petclinic-api-gateway', port: 8080],
@@ -50,12 +55,15 @@ pipeline {
                         [name: 'vets-service', dir: 'spring-petclinic-vets-service', port: 8083],
                         [name: 'visits-service', dir: 'spring-petclinic-visits-service', port: 8082]
                     ]
+
                     def servicesToBuild = serviceConfigs.findAll { config ->
                         changedFiles.any { it.startsWith(config.dir + '/') }
                     }
                     if (servicesToBuild.isEmpty()) {
                         echo "No services changed. Building all services as fallback."
                         servicesToBuild = serviceConfigs
+                    } else {
+                        echo "Building services with changes: ${servicesToBuild.collect { it.name }.join(', ')}"
                     }
 
                     withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
@@ -63,6 +71,12 @@ pipeline {
                         for (def service in servicesToBuild) {
                             def imageName = "${DOCKER_USERNAME}/spring-petclinic-${service.name}:${commitId}"
                             def jarFile = sh(script: "ls ${service.dir}/target/*.jar | head -1", returnStdout: true).trim()
+
+                            if (!jarFile) {
+                                error "No JAR file found for ${service.name} in ${service.dir}/target/"
+                            }
+
+                            echo "Building and pushing Docker image for ${service.name} with tag ${commitId}..."
                             sh """
                                 mkdir -p docker
                                 cp ${jarFile} docker/${service.name}.jar
@@ -80,8 +94,21 @@ pipeline {
     }
 
     post {
+        always {
+            echo "🧹 Cleaning up workspace..."
+            cleanWs()
+        }
         success {
-            echo "✅ Pipeline completed."
+            script {
+                if (env.SHOULD_RUN_PIPELINE == 'false') {
+                    echo "✅ Pipeline skipped successfully (main branch detected)."
+                } else {
+                    echo "✅ Pipeline completed successfully."
+                }
+            }
+        }
+        failure {
+            echo "❌ Pipeline failed. Check logs."
         }
     }
 }

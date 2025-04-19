@@ -10,7 +10,8 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 script {
-                    def branchName = env.BRANCH_NAME
+                    // Lấy tên nhánh từ env.BRANCH_NAME hoặc git
+                    def branchName = env.BRANCH_NAME ?: sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
                     echo "Current branch: ${branchName}"
 
                     if (branchName != 'main') {
@@ -19,6 +20,7 @@ pipeline {
                         return
                     }
 
+                    // Sử dụng checkout scm để hỗ trợ nhánh động hoặc giữ nguyên git checkout
                     git branch: 'main', url: 'https://github.com/phucvu0210/spring-petclinic-microservices.git'
                     sh 'git fetch --tags'
 
@@ -37,7 +39,7 @@ pipeline {
 
         stage('Build JAR') {
             when {
-                expression { env.SHOULD_RUN_PIPELINE == 'true' }
+                expression { return env.SHOULD_RUN_PIPELINE == 'true' }
             }
             steps {
                 sh './mvnw clean package -DskipTests'
@@ -46,7 +48,7 @@ pipeline {
 
         stage('Build and Push Docker Images') {
             when {
-                expression { env.SHOULD_RUN_PIPELINE == 'true' }
+                expression { return env.SHOULD_RUN_PIPELINE == 'true' }
             }
             steps {
                 script {
@@ -94,7 +96,7 @@ pipeline {
 
         stage('Update Helm Values') {
             when {
-                expression { env.SHOULD_RUN_PIPELINE == 'true' }
+                expression { return env.SHOULD_RUN_PIPELINE == 'true' }
             }
             steps {
                 script {
@@ -124,7 +126,7 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             when {
-                expression { env.SHOULD_RUN_PIPELINE == 'true' }
+                expression { return env.SHOULD_RUN_PIPELINE == 'true' }
             }
             steps {
                 script {
@@ -135,7 +137,7 @@ pipeline {
 
         stage('Print Access Info') {
             when {
-                expression { env.SHOULD_RUN_PIPELINE == 'true' }
+                expression { return env.SHOULD_RUN_PIPELINE == 'true' }
             }
             steps {
                 script {
@@ -156,7 +158,13 @@ pipeline {
             cleanWs()
         }
         success {
-            echo "✅ Staging pipeline completed (or skipped successfully)."
+            script {
+                if (env.SHOULD_RUN_PIPELINE == 'false') {
+                    echo "✅ Staging pipeline skipped successfully (not main branch or no git tag)."
+                } else {
+                    echo "✅ Staging pipeline completed successfully."
+                }
+            }
         }
         failure {
             echo "❌ Staging pipeline failed. Check logs."
