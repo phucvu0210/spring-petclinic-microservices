@@ -22,7 +22,7 @@ spec:
         - "until nc -z discovery-server 8761; do echo 'Waiting for discovery-server...'; sleep 5; done"
       containers:
       - name: admin-server
-        image: "{{ .Values.adminServer.repository }}:{{ .Values.adminServer.tag }}""
+        image: "{{ .Values.adminServer.repository }}:{{ .Values.adminServer.tag }}"
         ports:
         - containerPort: {{ .Values.adminServer.port }}
         env:
