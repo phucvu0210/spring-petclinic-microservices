@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: "{{ .Values.releaseTag | replace \".\" \"-\" }}.petclinic.local"
+  - host: "{{ .Values.releaseTag | replace "." "-" }}.petclinic.local"
     http:
       paths:
       - path: /
