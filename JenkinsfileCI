@@ -8,7 +8,9 @@ pipeline {
             steps {
                 script {
                     def branchToCheckout = env.BRANCH_NAME ?: 'main'
-                    echo "Checking out branch: ${branchToCheckout}"
+                    def gitTag = sh(script: 'git describe --tags --exact-match 2>/dev/null || true', returnStdout: true).trim()
+                    env.TAG_NAME = gitTag
+                    echo "Checking out branch: ${branchToCheckout}, Tag: ${gitTag}"
                     git branch: branchToCheckout, url: 'https://github.com/phucvu0210/spring-petclinic-microservices.git'
                 }
             }
@@ -25,6 +27,7 @@ pipeline {
             steps {
                 script {
                     def commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    def imageTag = env.TAG_NAME ? env.TAG_NAME : commitId 
                     def changedFiles = sh(script: "git diff --name-only HEAD^ HEAD || true", returnStdout: true).trim().split('\n')
                     def serviceConfigs = [
                         [name: 'admin-server', dir: 'spring-petclinic-admin-server', port: 9090],
@@ -52,14 +55,14 @@ pipeline {
                             def serviceDir = service.dir
                             def serviceName = service.name
                             def exposedPort = service.port
-                            def imageName = "${DOCKER_USERNAME}/spring-petclinic-${serviceName}:${commitId}"
+                            def imageName = "${DOCKER_USERNAME}/spring-petclinic-${serviceName}:${imageTag}"
                             def jarFile = sh(script: "ls ${serviceDir}/target/*.jar | head -1", returnStdout: true).trim()
 
                             if (!jarFile) {
                                 error "No JAR file found for ${serviceName} in ${serviceDir}/target/"
                             }
 
-                            echo "Building Docker image for ${serviceName}..."
+                            echo "Building Docker image for ${serviceName} with tag ${imageTag}..."
                             sh """
                                 mkdir -p docker
                                 cp ${jarFile} docker/${serviceName}.jar
@@ -70,7 +73,7 @@ pipeline {
                                 cd ..
                             """
 
-                            if (env.BRANCH_NAME == 'main') {
+                            if (env.BRANCH_NAME == 'main' && !env.TAG_NAME) {
                                 sh """
                                     docker tag ${imageName} ${DOCKER_USERNAME}/spring-petclinic-${serviceName}:latest
                                     docker push ${DOCKER_USERNAME}/spring-petclinic-${serviceName}:latest
@@ -82,52 +85,47 @@ pipeline {
             }
         }
     }
-    
-   post {
-       success {
-           script {
-               def commitId = env.GIT_COMMIT
-               echo "Sending success status to GitHub for commit: ${commitId}"
-               def response = httpRequest(
-                   url: "https://api.github.com/repos/phucvu0210/spring-petclinic-microservices/statuses/${commitId}",
-                   httpMode: 'POST',
-                   contentType: 'APPLICATION_JSON',
-                   requestBody: """{
-                       "state": "success",
-                       "description": "Build passed",
-                       "context": "ci/jenkins-pipeline",
-                       "target_url": "${env.BUILD_URL}"
-                   }""",
-                   authentication: 'github-token2'
-               )
-               echo "GitHub Response: ${response.status}"
-           }
-       }
-
-
-       failure {
-           script {
-               def commitId = env.GIT_COMMIT
-               echo "Sending failure status to GitHub for commit: ${commitId}"
-               def response = httpRequest(
-                   url: "https://api.github.com/repos/phucvu0210/spring-petclinic-microservices/statuses/${commitId}",
-                   httpMode: 'POST',
-                   contentType: 'APPLICATION_JSON',
-                   requestBody: """{
-                       "state": "failure",
-                       "description": "Build failed",
-                       "context": "ci/jenkins-pipeline",
-                       "target_url": "${env.BUILD_URL}"
-                   }""",
-                   authentication: 'github-token2'
-               )
-               echo "GitHub Response: ${response.status}"
-           }
-       }
-
-
-       always {
-           echo "Pipeline finished."
-       }
-   }
+    post {
+        success {
+            script {
+                def commitId = env.GIT_COMMIT
+                echo "Sending success status to GitHub for commit: ${commitId}"
+                def response = httpRequest(
+                    url: "https://api.github.com/repos/phucvu0210/spring-petclinic-microservices/statuses/${commitId}",
+                    httpMode: 'POST',
+                    contentType: 'APPLICATION_JSON',
+                    requestBody: """{
+                        "state": "success",
+                        "description": "Build passed",
+                        "context": "ci/jenkins-pipeline",
+                        "target_url": "${env.BUILD_URL}"
+                    }""",
+                    authentication: 'github-token2'
+                )
+                echo "GitHub Response: ${response.status}"
+            }
+        }
+        failure {
+            script {
+                def commitId = env.GIT_COMMIT
+                echo "Sending failure status to GitHub for commit: ${commitId}"
+                def response = httpRequest(
+                    url: "https://api.github.com/repos/phucvu0210/spring-petclinic-microservices/statuses/${commitId}",
+                    httpMode: 'POST',
+                    contentType: 'APPLICATION_JSON',
+                    requestBody: """{
+                        "state": "failure",
+                        "description": "Build failed",
+                        "context": "ci/jenkins-pipeline",
+                        "target_url": "${env.BUILD_URL}"
+                    }""",
+                    authentication: 'github-token2'
+                )
+                echo "GitHub Response: ${response.status}"
+            }
+        }
+        always {
+            echo "Pipeline finished."
+        }
+    }
 }
