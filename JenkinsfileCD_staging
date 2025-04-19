@@ -25,6 +25,11 @@ pipeline {
                 script {
                     def values = readYaml file: 'helm/petclinic/values.yaml'
                     
+                    // Update releaseTag and pathPrefix
+                    values.releaseTag = env.RELEASE_TAG
+                    values.apiGateway.pathPrefix = "/${env.RELEASE_TAG}"
+                    
+                    // Update image tags for all services
                     def serviceKeys = [
                         'adminServer',
                         'apiGateway',
@@ -33,7 +38,8 @@ pipeline {
                         'discoveryServer',
                         'genaiService',
                         'vetsService',
-                        'visitsService'
+                        'visitsService',
+                        'tracingServer'
                     ]
 
                     serviceKeys.each { serviceKey ->
@@ -58,8 +64,8 @@ pipeline {
                     def nodeName = sh(script: "kubectl get nodes --no-headers | grep -v control-plane | awk '{print \$1}'", returnStdout: true).trim()
                     def nodeIp = sh(script: "kubectl get node ${nodeName} -o jsonpath='{.status.addresses[?(@.type==\"InternalIP\")].address}'", returnStdout: true).trim()
                     def servicePort = sh(script: "kubectl get svc api-gateway -n ${K8S_NAMESPACE} -o jsonpath='{.spec.ports[0].nodePort}'", returnStdout: true).trim()
-                    echo "Access the application at: http://${nodeIp}:${servicePort}"
-                    echo "Or use: http://petclinic-staging.local:${servicePort} (after adding '${nodeIp} petclinic-staging.local' to /etc/hosts)"
+                    echo "Access the application at: http://${nodeIp}:${servicePort}${values.apiGateway.pathPrefix}"
+                    echo "Or use: http://petclinic-staging.local:${servicePort}${values.apiGateway.pathPrefix} (after adding '${nodeIp} petclinic-staging.local' to /etc/hosts)"
                 }
             }
         }
