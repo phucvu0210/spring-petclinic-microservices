@@ -19,7 +19,6 @@ apiGateway:
   tag: latest
   port: 8080
   nodePort: 30080
-  pathPrefix: ""  # Empty for dev, set to /<releaseTag> for staging
 
 configServer:
   repository: phucvu0210/spring-petclinic-config-server

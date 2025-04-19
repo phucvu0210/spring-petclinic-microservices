@@ -23,14 +23,10 @@ pipeline {
         stage('Prepare Helm Values') {
             steps {
                 script {
-                    // Đọc file values.yaml
                     def values = readYaml file: 'helm/petclinic/values.yaml'
                     
-                    // Cập nhật releaseTag và pathPrefix
                     values.releaseTag = env.RELEASE_TAG
-                    values.apiGateway.pathPrefix = "/${env.RELEASE_TAG}"
                     
-                    // Cập nhật tag cho tất cả service
                     def serviceKeys = [
                         'adminServer',
                         'apiGateway',
@@ -47,11 +43,7 @@ pipeline {
                         echo "Updated tag for ${serviceKey} to ${env.RELEASE_TAG}"
                     }
 
-                    // Ghi lại file values.yaml
                     writeYaml file: 'helm/petclinic/values.yaml', data: values, overwrite: true
-
-                    // Lưu pathPrefix vào biến môi trường để sử dụng ở stage sau
-                    env.PATH_PREFIX = values.apiGateway.pathPrefix
                 }
             }
         }
@@ -68,8 +60,9 @@ pipeline {
                     def nodeName = sh(script: "kubectl get nodes --no-headers | grep -v control-plane | awk '{print \$1}'", returnStdout: true).trim()
                     def nodeIp = sh(script: "kubectl get node ${nodeName} -o jsonpath='{.status.addresses[?(@.type==\"InternalIP\")].address}'", returnStdout: true).trim()
                     def servicePort = sh(script: "kubectl get svc api-gateway -n ${K8S_NAMESPACE} -o jsonpath='{.spec.ports[0].nodePort}'", returnStdout: true).trim()
-                    echo "Access the application at: http://${nodeIp}:${servicePort}${env.PATH_PREFIX}"
-                    echo "Or use: http://petclinic-staging.local:${servicePort}${env.PATH_PREFIX} (after adding '${nodeIp} petclinic-staging.local' to /etc/hosts)"
+                    def subdomain = env.RELEASE_TAG.replace('.', '-')
+                    echo "Access the application at: http://${nodeIp}:${servicePort}"
+                    echo "Or use: http://${subdomain}.petclinic.local:${servicePort}"
                 }
             }
         }

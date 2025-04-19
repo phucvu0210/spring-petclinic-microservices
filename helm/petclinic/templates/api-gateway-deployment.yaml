@@ -50,5 +50,3 @@ spec:
           value: "10"
         - name: EUREKA_CLIENT_EUREKA_SERVER_READ_TIMEOUT_SECONDS
           value: "10"
-        - name: SERVER_SERVLET_CONTEXT_PATH
-          value: {{ .Values.apiGateway.pathPrefix | default "" }}
